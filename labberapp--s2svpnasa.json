@@ -1,0 +1,1783 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "homeip": {
+          "defaultValue": "your home ip address for the nsg",
+          "type": "string"
+                   },
+        "RG-name": {
+            "defaultValue": "Resource group name the lab should use, this will be created and deleted everyday.",
+            "type": "string"
+        },
+        "VM-username": {
+            "defaultValue": "azureadmin",
+            "type": "string"
+        },
+        "VM-password": {
+            "defaultValue": "@@zurePassword",
+            "type": "securestring",
+            "metadata": {
+                "description": "default pw is @zurePassword"
+              }
+        }
+    },
+    "variables": {},
+    "resources": [
+        
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2016-06-01",
+            "name": "arm",
+            "location": "[resourceGroup().location]",
+            "kind": "V1",
+            "properties": {
+                "displayName": "arm-connector",
+                "statuses": [
+                    {
+                        "status": "Ready"
+                    }
+                ],
+                "parameterValueSet": {
+                   
+                    },
+                "customParameterValues": {},
+                "alternativeParameterValues": {},
+                "parameterValueType": "Alternative",
+                "createdTime": "2024-06-25T12:36:28.6476911Z",
+                "changedTime": "2024-06-25T12:36:28.6476911Z",
+                "api": {
+                    "name": "arm",
+                    "displayName": "Azure Resource Manager",
+                    "description": "Azure Resource Manager exposes the APIs to manage all of your Azure resources.",
+                    "iconUri": "https://connectoricons-prod.azureedge.net/releases/v1.0.1685/1.0.1685.3700/arm/icon.png",
+                    "brandColor": "#003056",
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/arm')]",
+                    "type": "Microsoft.Web/locations/managedApis"
+                },
+                "testLinks": []
+            }
+        },
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "lab-s2s-creator",
+            "location": "[resourceGroup().location]",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "Recurrence": {
+                "evaluatedRecurrence": {
+                    "frequency": "Week",
+                    "interval": 1,
+                    "schedule": {
+                        "weekDays": [
+                            "Monday",
+                            "Tuesday",
+                            "Wednesday",
+                            "Thursday",
+                            "Friday"
+                        ]
+                    },
+                    "startTime": "2023-11-15T11:00:00Z"
+                },
+                "recurrence": {
+                    "frequency": "Week",
+                    "interval": 1,
+                    "schedule": {
+                        "weekDays": [
+                            "Monday",
+                            "Tuesday",
+                            "Wednesday",
+                            "Thursday",
+                            "Friday"
+                        ]
+                    },
+                    "startTime": "2023-11-15T11:00:00Z"
+                },
+                            "type": "Recurrence"
+                        }
+                    },
+                    "actions": {
+                        "Create_or_update_a_template_deployment": {
+                            "runAfter": {
+                                "Create_or_update_a_resource_group": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['arm']['connectionId']"
+                                    }
+                                },
+                                "method": "put",
+                                "body": {
+                                    "properties": {
+                                        "template": {
+                                            "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {},
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Network/localNetworkGateways",
+            "apiVersion": "2023-11-01",
+            "name": "onpremlng",
+            "location": "eastus2",
+            "properties": {
+                "localNetworkAddressSpace": {
+                    "addressPrefixes": [
+                        "192.168.0.0/16"
+                    ]
+                },
+                
+                "gatewayIpAddress": "[[reference('onpremasa-pip').ipAddress]",
+                "bgpSettings": {
+                    "asn": 65002,
+                    "bgpPeeringAddress": "172.16.1.1",
+                    "peerWeight": 0
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2023-11-01",
+            "name": "AZ-hub-vnet-default-nsg",
+            "location": "eastus2",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "AllowCidrBlockRDPInbound",
+                        "id": "[[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', 'AZ-hub-vnet-default-nsg', 'AllowCidrBlockRDPInbound')]",
+                        "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "sourceAddressPrefix": "[parameters('homeip')]",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 2711,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2023-11-01",
+            "name": "AZ-spoke-vnet-default-nsg",
+            "location": "eastus2",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "AllowCidrBlockRDPInbound",
+                        "id": "[[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', 'AZ-spoke-vnet-default-nsg', 'AllowCidrBlockRDPInbound')]",
+                        "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "sourceAddressPrefix": "[parameters('homeip')]",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 2711,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2023-11-01",
+            "name": "onprem-asa-default-nsg",
+            "location": "eastus2",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "AllowCidrBlockOutbound",
+                        "id": "[[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', 'onprem-asa-default-nsg', 'AllowCidrBlockOutbound')]",
+                        "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                        "properties": {
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "10.0.0.0/8",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 2712,
+                            "direction": "Outbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    },
+                    {
+                        "name": "AllowCidrBlockInbound",
+                        "id": "[[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', 'onprem-asa-default-nsg', 'AllowCidrBlockInbound')]",
+                        "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                        "properties": {
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "192.168.0.0/24",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 2711,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2023-11-01",
+            "name": "onprem-ssh-default-nsg",
+            "location": "eastus2",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "AllowCidrBlockSSHInbound",
+                        "id": "[[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', 'onprem-ssh-default-nsg', 'AllowCidrBlockSSHInbound')]",
+                        "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "22",
+                            "sourceAddressPrefix": "[parameters('homeip')]",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 2711,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2023-11-01",
+            "name": "onprem-vnet-default-nsg",
+            "location": "eastus2",
+            "properties": {
+                "securityRules": [
+                    {
+                        "name": "AllowCidrBlockRDPInbound",
+                        "id": "[[resourceId('Microsoft.Network/networkSecurityGroups/securityRules', 'onprem-vnet-default-nsg', 'AllowCidrBlockRDPInbound')]",
+                        "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "3389",
+                            "sourceAddressPrefix": "[parameters('homeip')]",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 2711,
+                            "direction": "Inbound",
+                            "sourcePortRanges": [],
+                            "destinationPortRanges": [],
+                            "sourceAddressPrefixes": [],
+                            "destinationAddressPrefixes": []
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2023-11-01",
+            "name": "azurevpngw-pip",
+            "location": "eastus2",
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            },
+            "properties": {
+                
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Static",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": [],
+                "ddosSettings": {
+                    "protectionMode": "VirtualNetworkInherited"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2023-11-01",
+            "name": "hubvm-pip",
+            "location": "eastus2",
+            "sku": {
+                "name": "Basic",
+                "tier": "Regional"
+            },
+            "properties": {
+                
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": [],
+                "ddosSettings": {
+                    "protectionMode": "VirtualNetworkInherited"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2023-11-01",
+            "name": "onpremasa-pip",
+            "location": "eastus2",
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            },
+            "properties": {
+                
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Static",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": [],
+                "ddosSettings": {
+                    "protectionMode": "VirtualNetworkInherited"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2023-11-01",
+            "name": "onpremvm-pip",
+            "location": "eastus2",
+            "sku": {
+                "name": "Basic",
+                "tier": "Regional"
+            },
+            "properties": {
+                
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": [],
+                "ddosSettings": {
+                    "protectionMode": "VirtualNetworkInherited"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2023-11-01",
+            "name": "spokevm-pip",
+            "location": "eastus2",
+            "sku": {
+                "name": "Basic",
+                "tier": "Regional"
+            },
+            "properties": {
+                
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": [],
+                "ddosSettings": {
+                    "protectionMode": "VirtualNetworkInherited"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables",
+            "apiVersion": "2023-11-01",
+            "name": "RT",
+            "location": "eastus2",
+            "properties": {
+                "disableBgpRoutePropagation": false,
+                "routes": [
+                    {
+                        "name": "toasa",
+                        "id": "[[resourceId('Microsoft.Network/routeTables/routes', 'RT', 'toasa')]",
+                        "properties": {
+                            "addressPrefix": "10.0.0.0/8",
+                            "nextHopType": "VirtualAppliance",
+                            "nextHopIpAddress": "192.168.3.4",
+                            "hasBgpOverride": false
+                        },
+                        "type": "Microsoft.Network/routeTables/routes"
+                    }
+                ]
+            }
+        },
+        
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2024-03-01",
+            "name": "hubvm",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/networkInterfaces', 'hubvm-nic')]"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B2ms"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2022-datacenter-azure-edition",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "hubvm_OsDisk_1_f096c74236fd47118e595637eb20802c",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "writeAcceleratorEnabled": false,
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS"
+                            
+                        },
+                        "deleteOption": "Detach",
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": [],
+                    "diskControllerType": "SCSI"
+                },
+                "osProfile": {
+                    "computerName": "hubvm",
+                    "adminUsername": "[parameters('VM-username')]",
+                    "adminPassword": "[parameters('VM-password')]",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true,
+                        "patchSettings": {
+                            "patchMode": "AutomaticByOS",
+                            "assessmentMode": "ImageDefault",
+                            "enableHotpatching": false
+                        },
+                        "winRM": {
+                            "listeners": []
+                        },
+                        "enableVMAgentPlatformUpdates": false
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true
+                    
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[[resourceId('Microsoft.Network/networkInterfaces', 'hubvm-nic')]",
+                            "properties": {
+                                "primary": true
+                            }
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": false
+                    }
+                },
+                "priority": "Regular",
+                "extensionsTimeBudget": "PT1H30M"
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2024-03-01",
+            "name": "onpremvm",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/networkInterfaces', 'onpremvm-nic')]"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B2ms"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2022-datacenter-azure-edition",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "onpremvm_OsDisk_1_cb4928c9fc1c4c049fb3fb0b7bb0af04",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "writeAcceleratorEnabled": false,
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS"
+                            
+                        },
+                        "deleteOption": "Detach",
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": [],
+                    "diskControllerType": "SCSI"
+                },
+                "osProfile": {
+                    "computerName": "onpremvm",
+                    "adminUsername": "[parameters('VM-username')]",
+                    "adminPassword": "[parameters('VM-password')]",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true,
+                        "patchSettings": {
+                            "patchMode": "AutomaticByOS",
+                            "assessmentMode": "ImageDefault",
+                            "enableHotpatching": false
+                        },
+                        "winRM": {
+                            "listeners": []
+                        },
+                        "enableVMAgentPlatformUpdates": false
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true
+                    
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[[resourceId('Microsoft.Network/networkInterfaces', 'onpremvm-nic')]",
+                            "properties": {
+                                "primary": true
+                            }
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": false
+                    }
+                },
+                "priority": "Regular",
+                "extensionsTimeBudget": "PT1H30M"
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2024-03-01",
+            "name": "spokevm",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/networkInterfaces', 'spokevm-nic')]"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B2ms"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2022-datacenter-azure-edition",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "spokevm_OsDisk_1_f13e9ff5e3894dfa9cf734fd2f16ba79",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "writeAcceleratorEnabled": false,
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS"
+                            
+                        },
+                        "deleteOption": "Detach",
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": [],
+                    "diskControllerType": "SCSI"
+                },
+                "osProfile": {
+                    "computerName": "spokevm",
+                    "adminUsername": "[parameters('VM-username')]",
+                    "adminPassword": "[parameters('VM-password')]",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true,
+                        "patchSettings": {
+                            "patchMode": "AutomaticByOS",
+                            "assessmentMode": "ImageDefault",
+                            "enableHotpatching": false
+                        },
+                        "winRM": {
+                            "listeners": []
+                        },
+                        "enableVMAgentPlatformUpdates": false
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true
+                    
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[[resourceId('Microsoft.Network/networkInterfaces', 'spokevm-nic')]",
+                            "properties": {
+                                "primary": true
+                            }
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": false
+                    }
+                },
+                "priority": "Regular",
+                "extensionsTimeBudget": "PT1H30M"
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2024-03-01",
+            "name": "hubvm/killhubvmfirewall",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Compute/virtualMachines', 'hubvm')]"
+            ],
+            "properties": {
+                "autoUpgradeMinorVersion": true,
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.10",
+                "settings": {
+                    "commandToExecute": "powershell -command \"Set-NetFirewallProfile -Enabled False\""
+                },
+                "protectedSettings": {}
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2024-03-01",
+            "name": "onpremvm/killonpremvmfirewall",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Compute/virtualMachines', 'onpremvm')]"
+            ],
+            "properties": {
+                "autoUpgradeMinorVersion": true,
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.10",
+                "settings": {
+                    "commandToExecute": "powershell -command \"Set-NetFirewallProfile -Enabled False\""
+                },
+                "protectedSettings": {}
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "apiVersion": "2024-03-01",
+            "name": "spokevm/killspokevmfirewall",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Compute/virtualMachines', 'spokevm')]"
+            ],
+            "properties": {
+                "autoUpgradeMinorVersion": true,
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.10",
+                "settings": {
+                    "commandToExecute": "powershell -command \"Set-NetFirewallProfile -Enabled False\""
+                },
+                "protectedSettings": {}
+            }
+        },
+        
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2023-11-01",
+            "name": "asainside-nic",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'onprem-vnet', 'inside')]"
+            ],
+            "kind": "Regular",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "id": "[[concat(resourceId('Microsoft.Network/networkInterfaces', 'asainside-nic'), '/ipConfigurations/ipconfig1')]",
+                        "type": "Microsoft.Network/networkInterfaces/ipConfigurations",
+                        "properties": {
+                            "privateIPAddress": "192.168.3.4",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'onprem-vnet', 'inside')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": true,
+                "disableTcpStateTracking": false,
+                "nicType": "Standard",
+                "auxiliaryMode": "None",
+                "auxiliarySku": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2023-11-01",
+            "name": "onprem-asa-default-nsg/AllowCidrBlockInbound",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-asa-default-nsg')]"
+            ],
+            "properties": {
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefix": "192.168.0.0/24",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 2711,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2023-11-01",
+            "name": "onprem-asa-default-nsg/AllowCidrBlockOutbound",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-asa-default-nsg')]"
+            ],
+            "properties": {
+                "protocol": "*",
+                "sourcePortRange": "*",
+                "destinationPortRange": "*",
+                "sourceAddressPrefix": "10.0.0.0/8",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 2712,
+                "direction": "Outbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkSecurityGroups/securityRules",
+            "apiVersion": "2023-11-01",
+            "name": "onprem-vnet-default-nsg/AllowCidrBlockRDPInbound",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-vnet-default-nsg')]"
+            ],
+            "properties": {
+                "protocol": "Tcp",
+                "sourcePortRange": "*",
+                "destinationPortRange": "3389",
+                "sourceAddressPrefix": "[parameters('homeip')]",
+                "destinationAddressPrefix": "*",
+                "access": "Allow",
+                "priority": 2711,
+                "direction": "Inbound",
+                "sourcePortRanges": [],
+                "destinationPortRanges": [],
+                "sourceAddressPrefixes": [],
+                "destinationAddressPrefixes": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/routeTables/routes",
+            "apiVersion": "2023-11-01",
+            "name": "RT/toasa",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/routeTables', 'RT')]"
+            ],
+            "properties": {
+                "addressPrefix": "10.0.0.0/8",
+                "nextHopType": "VirtualAppliance",
+                "nextHopIpAddress": "192.168.3.4",
+                "hasBgpOverride": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2023-11-01",
+            "name": "AZ-hub-vnet/GatewaySubnet",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/virtualNetworks', 'AZ-hub-vnet')]"
+            ],
+            "properties": {
+                "addressPrefix": "10.0.1.0/24",
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Disabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2023-11-01",
+            "name": "AZ-spoke-vnet/GatewaySubnet",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/virtualNetworks', 'AZ-spoke-vnet')]"
+            ],
+            "properties": {
+                "addressPrefix": "10.250.1.0/24",
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Disabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2023-11-01",
+            "name": "onprem-vnet/GatewaySubnet",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/virtualNetworks', 'onprem-vnet')]"
+            ],
+            "properties": {
+                "addressPrefix": "192.168.1.0/24",
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Disabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2024-03-01",
+            "name": "asa",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/networkInterfaces', 'asaoutside-nic')]",
+                "[[resourceId('Microsoft.Network/networkInterfaces', 'asainside-nic')]"
+            ],
+            "plan": {
+                "name": "asav-azure-byol",
+                "product": "cisco-asav",
+                "publisher": "cisco"
+            },
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_D2_v2"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "cisco",
+                        "offer": "cisco-asav",
+                        "sku": "asav-azure-byol",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Linux",
+                        "name": "asa_OsDisk_1_b1895fd3a1a24b0dbab34fe2b13699a6",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "writeAcceleratorEnabled": false,
+                        "managedDisk": {
+                            "storageAccountType": "Standard_LRS"
+                            
+                        },
+                        "deleteOption": "Detach",
+                        "diskSizeGB": 9
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "asa",
+                    "adminUsername": "[parameters('VM-username')]",
+                    "adminPassword": "[parameters('VM-password')]",
+                    "customData": "[[base64(concat('int gi0/0\nno shut\nnameif inside\nip address dhcp\nroute inside 192.168.0.0 255.255.0.0 192.168.3.1\naaa authorization exec LOCAL auto-enable\ncrypto ikev2 enable management\ncrypto ikev2 policy 50\nencryption aes-256\nintegrity sha\ngroup 2\nprf sha\nlifetime seconds 86400\ncrypto ipsec ikev2 ipsec-proposal vpn\nprotocol esp encryption aes-256\nprotocol esp integrity sha-1\ncrypto ipsec profile vpn-profile\nset ikev2 ipsec-proposal vpn\ninterface Tunnel1\nnameif vpntunnel\nip address 172.16.1.1 255.255.255.252\ntunnel source interface management\ntunnel destination ', reference('azurevpngw-pip').ipAddress,'\ntunnel mode ipsec ipv4\ntunnel protection ipsec profile vpn-profile\ngroup-policy vpn-tunnel internal\ngroup-policy vpn-tunnel attributes\nvpn-tunnel-protocol ikev2\ntunnel-group ', reference('azurevpngw-pip').ipAddress,' type ipsec-l2l\ntunnel-group ', reference('azurevpngw-pip').ipAddress,' general-attributes\ndefault-group-policy vpn-tunnel\ntunnel-group ', reference('azurevpngw-pip').ipAddress,' ipsec-attributes\nikev2 remote-authentication pre-shared-key vpn123\nikev2 local-authentication pre-shared-key vpn123\nrouter bgp 65002\nbgp log-neighbor-changes\naddress-family ipv4\nneighbor ', reference('azvpngw').bgpSettings.bgpPeeringAddresses[0].defaultBgpIpAddresses[0], ' remote-as 65515\nneighbor ', reference('azvpngw').bgpSettings.bgpPeeringAddresses[0].defaultBgpIpAddresses[0], ' ebgp-multihop 255  \nnetwork 192.168.0.0 mask 255.255.0.0\nneighbor ', reference('azvpngw').bgpSettings.bgpPeeringAddresses[0].defaultBgpIpAddresses[0], ' activate\nexit\naccess-list inside permit ip any any\naccess-group inside in interface inside\nroute vpntunnel ', reference('azvpngw').bgpSettings.bgpPeeringAddresses[0].defaultBgpIpAddresses[0], ' 255.255.255.255 8.8.8.8\n'))]",
+                    "linuxConfiguration": {
+                        "disablePasswordAuthentication": false,
+                        "ssh": {
+                            "publicKeys": []
+                        },
+                        "provisionVMAgent": true,
+                        "patchSettings": {
+                            "patchMode": "ImageDefault",
+                            "assessmentMode": "ImageDefault"
+                        },
+                        "enableVMAgentPlatformUpdates": false
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true
+                    
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[[resourceId('Microsoft.Network/networkInterfaces', 'asaoutside-nic')]",
+                            "properties": {
+                                "primary": true
+                            }
+                        },
+                        {
+                            "id": "[[resourceId('Microsoft.Network/networkInterfaces', 'asainside-nic')]",
+                            "properties": {
+                                "primary": false
+                            }
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": false
+                    }
+                },
+                "priority": "Regular",
+                "extensionsTimeBudget": "PT1H30M"
+            }
+        },
+        {
+            "type": "Microsoft.Network/connections",
+            "apiVersion": "2023-11-01",
+            "name": "to-onprem",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/virtualNetworkGateways', 'AzVPNGW')]",
+                "[[resourceId('Microsoft.Network/localNetworkGateways', 'onpremlng')]"
+            ],
+            "properties": {
+                "virtualNetworkGateway1": {
+                    "id": "[[resourceId('Microsoft.Network/virtualNetworkGateways', 'AzVPNGW')]",
+                    "properties": {}
+                },
+                "localNetworkGateway2": {
+                    "id": "[[resourceId('Microsoft.Network/localNetworkGateways', 'onpremlng')]",
+                    "properties": {}
+                },
+                "connectionType": "IPsec",
+                "connectionProtocol": "IKEv2",
+                "routingWeight": 0,
+                "sharedKey": "vpn123",
+                "enableBgp": true,
+                "useLocalAzureIpAddress": false,
+                "usePolicyBasedTrafficSelectors": false,
+                "ipsecPolicies": [],
+                "trafficSelectorPolicies": [],
+                "expressRouteGatewayBypass": false,
+                "enablePrivateLinkFastPath": false,
+                "dpdTimeoutSeconds": 0,
+                "connectionMode": "Default",
+                "gatewayCustomBgpIpAddresses": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2023-11-01",
+            "name": "asaoutside-nic",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/publicIPAddresses', 'onpremasa-pip')]",
+                "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'onprem-vnet', 'outside')]"
+            ],
+            "kind": "Regular",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "id": "[[concat(resourceId('Microsoft.Network/networkInterfaces', 'asaoutside-nic'), '/ipConfigurations/ipconfig1')]",
+                        "type": "Microsoft.Network/networkInterfaces/ipConfigurations",
+                        "properties": {
+                            "privateIPAddress": "192.168.2.4",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[[resourceId('Microsoft.Network/publicIPAddresses', 'onpremasa-pip')]"
+                            },
+                            "subnet": {
+                                "id": "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'onprem-vnet', 'outside')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": true,
+                "disableTcpStateTracking": false,
+                "nicType": "Standard",
+                "auxiliaryMode": "None",
+                "auxiliarySku": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2023-11-01",
+            "name": "hubvm-nic",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/publicIPAddresses', 'hubvm-pip')]",
+                "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'AZ-hub-vnet', 'default')]"
+            ],
+            "kind": "Regular",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "id": "[[concat(resourceId('Microsoft.Network/networkInterfaces', 'hubvm-nic'), '/ipConfigurations/ipconfig1')]",
+                        "type": "Microsoft.Network/networkInterfaces/ipConfigurations",
+                        "properties": {
+                            "privateIPAddress": "10.0.0.4",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[[resourceId('Microsoft.Network/publicIPAddresses', 'hubvm-pip')]"
+                            },
+                            "subnet": {
+                                "id": "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'AZ-hub-vnet', 'default')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false,
+                "disableTcpStateTracking": false,
+                "nicType": "Standard",
+                "auxiliaryMode": "None",
+                "auxiliarySku": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2023-11-01",
+            "name": "onpremvm-nic",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/publicIPAddresses', 'onpremvm-pip')]",
+                "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'onprem-vnet', 'default')]"
+            ],
+            "kind": "Regular",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "id": "[[concat(resourceId('Microsoft.Network/networkInterfaces', 'onpremvm-nic'), '/ipConfigurations/ipconfig1')]",
+                        "type": "Microsoft.Network/networkInterfaces/ipConfigurations",
+                        "properties": {
+                            "privateIPAddress": "192.168.0.4",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[[resourceId('Microsoft.Network/publicIPAddresses', 'onpremvm-pip')]"
+                            },
+                            "subnet": {
+                                "id": "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'onprem-vnet', 'default')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false,
+                "disableTcpStateTracking": false,
+                "nicType": "Standard",
+                "auxiliaryMode": "None",
+                "auxiliarySku": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2023-11-01",
+            "name": "spokevm-nic",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/publicIPAddresses', 'spokevm-pip')]",
+                "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'AZ-spoke-vnet', 'default')]"
+            ],
+            "kind": "Regular",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "id": "[[concat(resourceId('Microsoft.Network/networkInterfaces', 'spokevm-nic'), '/ipConfigurations/ipconfig1')]",
+                        "type": "Microsoft.Network/networkInterfaces/ipConfigurations",
+                        "properties": {
+                            "privateIPAddress": "10.250.0.4",
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[[resourceId('Microsoft.Network/publicIPAddresses', 'spokevm-pip')]"
+                            },
+                            "subnet": {
+                                "id": "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'AZ-spoke-vnet', 'default')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false,
+                "disableTcpStateTracking": false,
+                "nicType": "Standard",
+                "auxiliaryMode": "None",
+                "auxiliarySku": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "apiVersion": "2023-11-01",
+            "name": "AzVPNGW",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/publicIPAddresses', 'azurevpngw-pip')]",
+                "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'AZ-hub-vnet', 'GatewaySubnet')]"
+            ],
+            "properties": {
+                "enablePrivateIpAddress": false,
+                "ipConfigurations": [
+                    {
+                        "name": "vnetGatewayConfig",
+                        "id": "[[concat(resourceId('Microsoft.Network/virtualNetworkGateways', 'AzVPNGW'), '/ipConfigurations/vnetGatewayConfig')]",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[[resourceId('Microsoft.Network/publicIPAddresses', 'azurevpngw-pip')]"
+                            },
+                            "subnet": {
+                                "id": "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'AZ-hub-vnet', 'GatewaySubnet')]"
+                            }
+                        }
+                    }
+                ],
+                "natRules": [],
+                "virtualNetworkGatewayPolicyGroups": [],
+                "enableBgpRouteTranslationForNat": false,
+                "disableIPSecReplayProtection": false,
+                "sku": {
+                    "name": "VpnGw2",
+                    "tier": "VpnGw2"
+                },
+                "gatewayType": "Vpn",
+                "vpnType": "RouteBased",
+                "enableBgp": true,
+                "activeActive": false,
+                "bgpSettings": {
+                    "asn": 65515,
+                    "bgpPeeringAddress": "10.0.1.254",
+                    "peerWeight": 0,
+                    "bgpPeeringAddresses": [
+                        {
+                            "ipconfigurationId": "[[concat(resourceId('Microsoft.Network/virtualNetworkGateways', 'AzVPNGW'), '/ipConfigurations/vnetGatewayConfig')]",
+                            "customBgpIpAddresses": []
+                        }
+                    ]
+                },
+                "vpnGatewayGeneration": "Generation1",
+                "allowRemoteVnetTraffic": false,
+                "allowVirtualWanTraffic": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2023-11-01",
+            "name": "AZ-hub-vnet",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/networkSecurityGroups', 'AZ-hub-vnet-default-nsg')]"
+                
+            ],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "dhcpOptions": {
+                    "dnsServers": []
+                },
+                "subnets": [
+                    {
+                        "name": "GatewaySubnet",
+                        "id": "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'AZ-hub-vnet', 'GatewaySubnet')]",
+                        "properties": {
+                            "addressPrefix": "10.0.1.0/24",
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Disabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        },
+                        "type": "Microsoft.Network/virtualNetworks/subnets"
+                    },
+                    {
+                        "name": "default",
+                        "id": "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'AZ-hub-vnet', 'default')]",
+                        "properties": {
+                            "addressPrefix": "10.0.0.0/24",
+                            "networkSecurityGroup": {
+                                "id": "[[resourceId('Microsoft.Network/networkSecurityGroups', 'AZ-hub-vnet-default-nsg')]"
+                            },
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Disabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        },
+                        "type": "Microsoft.Network/virtualNetworks/subnets"
+                    }
+                ],
+                "virtualNetworkPeerings": [
+                    {
+                        "name": "hub-to-spoke-peering",
+                        "id": "[[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', 'AZ-hub-vnet', 'hub-to-spoke-peering')]",
+                        "properties": {
+                            "peeringState": "Connected",
+                            "peeringSyncLevel": "FullyInSync",
+                            "remoteVirtualNetwork": {
+                                "id": "[[resourceId('Microsoft.Network/virtualNetworks', 'AZ-spoke-vnet')]"
+                            },
+                            "allowVirtualNetworkAccess": true,
+                            "allowForwardedTraffic": true,
+                            "allowGatewayTransit": true,
+                            "useRemoteGateways": false,
+                            "doNotVerifyRemoteGateways": false,
+                            "peerCompleteVnets": true,
+                            "remoteAddressSpace": {
+                                "addressPrefixes": [
+                                    "10.250.0.0/16"
+                                ]
+                            },
+                            "remoteVirtualNetworkAddressSpace": {
+                                "addressPrefixes": [
+                                    "10.250.0.0/16"
+                                ]
+                            }
+                        },
+                        "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings"
+                    }
+                ],
+                "enableDdosProtection": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2023-11-01",
+            "name": "AZ-spoke-vnet",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/networkSecurityGroups', 'AZ-spoke-vnet-default-nsg')]"
+                
+            ],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.250.0.0/16"
+                    ]
+                },
+                "dhcpOptions": {
+                    "dnsServers": []
+                },
+                "subnets": [
+                    {
+                        "name": "GatewaySubnet",
+                        "id": "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'AZ-spoke-vnet', 'GatewaySubnet')]",
+                        "properties": {
+                            "addressPrefix": "10.250.1.0/24",
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Disabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        },
+                        "type": "Microsoft.Network/virtualNetworks/subnets"
+                    },
+                    {
+                        "name": "default",
+                        "id": "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'AZ-spoke-vnet', 'default')]",
+                        "properties": {
+                            "addressPrefix": "10.250.0.0/24",
+                            "networkSecurityGroup": {
+                                "id": "[[resourceId('Microsoft.Network/networkSecurityGroups', 'AZ-spoke-vnet-default-nsg')]"
+                            },
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Disabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        },
+                        "type": "Microsoft.Network/virtualNetworks/subnets"
+                    }
+                ],
+                "virtualNetworkPeerings": [
+                    {
+                        "name": "spoke-to-hub-peering",
+                        "id": "[[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', 'AZ-spoke-vnet', 'spoke-to-hub-peering')]",
+                        "properties": {
+                            "peeringState": "Connected",
+                            "peeringSyncLevel": "FullyInSync",
+                            "remoteVirtualNetwork": {
+                                "id": "[[resourceId('Microsoft.Network/virtualNetworks', 'AZ-hub-vnet')]"
+                            },
+                            "allowVirtualNetworkAccess": true,
+                            "allowForwardedTraffic": true,
+                            "allowGatewayTransit": false,
+                            "useRemoteGateways": true,
+                            "doNotVerifyRemoteGateways": false,
+                            "peerCompleteVnets": true,
+                            "remoteAddressSpace": {
+                                "addressPrefixes": [
+                                    "10.0.0.0/16"
+                                ]
+                            },
+                            "remoteVirtualNetworkAddressSpace": {
+                                "addressPrefixes": [
+                                    "10.0.0.0/16"
+                                ]
+                            }
+                        },
+                        "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings"
+                    }
+                ],
+                "enableDdosProtection": false
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2023-11-01",
+            "name": "AZ-hub-vnet/default",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/virtualNetworks', 'AZ-hub-vnet')]",
+                "[[resourceId('Microsoft.Network/networkSecurityGroups', 'AZ-hub-vnet-default-nsg')]"
+            ],
+            "properties": {
+                "addressPrefix": "10.0.0.0/24",
+                "networkSecurityGroup": {
+                    "id": "[[resourceId('Microsoft.Network/networkSecurityGroups', 'AZ-hub-vnet-default-nsg')]"
+                },
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Disabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2023-11-01",
+            "name": "AZ-spoke-vnet/default",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/virtualNetworks', 'AZ-spoke-vnet')]",
+                "[[resourceId('Microsoft.Network/networkSecurityGroups', 'AZ-spoke-vnet-default-nsg')]"
+            ],
+            "properties": {
+                "addressPrefix": "10.250.0.0/24",
+                "networkSecurityGroup": {
+                    "id": "[[resourceId('Microsoft.Network/networkSecurityGroups', 'AZ-spoke-vnet-default-nsg')]"
+                },
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Disabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2023-11-01",
+            "name": "onprem-vnet/inside",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/virtualNetworks', 'onprem-vnet')]",
+                "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-asa-default-nsg')]"
+            ],
+            "properties": {
+                "addressPrefix": "192.168.3.0/24",
+                "networkSecurityGroup": {
+                    "id": "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-asa-default-nsg')]"
+                },
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Disabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2023-11-01",
+            "name": "onprem-vnet/outside",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/virtualNetworks', 'onprem-vnet')]",
+                "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-ssh-default-nsg')]"
+            ],
+            "properties": {
+                "addressPrefix": "192.168.2.0/24",
+                "networkSecurityGroup": {
+                    "id": "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-ssh-default-nsg')]"
+                },
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Disabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "apiVersion": "2023-11-01",
+            "name": "AZ-hub-vnet/hub-to-spoke-peering",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/virtualNetworks', 'AZ-hub-vnet')]",
+                "[[resourceId('Microsoft.Network/virtualNetworks', 'AZ-spoke-vnet')]"
+            ],
+            "properties": {
+                "peeringState": "Connected",
+                "peeringSyncLevel": "FullyInSync",
+                "remoteVirtualNetwork": {
+                    "id": "[[resourceId('Microsoft.Network/virtualNetworks', 'AZ-spoke-vnet')]"
+                },
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": true,
+                "useRemoteGateways": false,
+                "doNotVerifyRemoteGateways": false,
+                "peerCompleteVnets": true,
+                "remoteAddressSpace": {
+                    "addressPrefixes": [
+                        "10.250.0.0/16"
+                    ]
+                },
+                "remoteVirtualNetworkAddressSpace": {
+                    "addressPrefixes": [
+                        "10.250.0.0/16"
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+            "apiVersion": "2023-11-01",
+            "name": "AZ-spoke-vnet/spoke-to-hub-peering",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/virtualNetworks', 'AZ-spoke-vnet')]",
+                "[[resourceId('Microsoft.Network/virtualNetworks', 'AZ-hub-vnet')]",
+                "[[resourceId('Microsoft.Network/virtualNetworkGateways', 'AzVPNGW')]"
+            ],
+            "properties": {
+                "peeringState": "Connected",
+                "peeringSyncLevel": "FullyInSync",
+                "remoteVirtualNetwork": {
+                    "id": "[[resourceId('Microsoft.Network/virtualNetworks', 'AZ-hub-vnet')]"
+                },
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": true,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": true,
+                "doNotVerifyRemoteGateways": false,
+                "peerCompleteVnets": true,
+                "remoteAddressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "remoteVirtualNetworkAddressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks/subnets",
+            "apiVersion": "2023-11-01",
+            "name": "onprem-vnet/default",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/virtualNetworks', 'onprem-vnet')]",
+                "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-vnet-default-nsg')]",
+                "[[resourceId('Microsoft.Network/routeTables', 'RT')]"
+            ],
+            "properties": {
+                "addressPrefix": "192.168.0.0/24",
+                "networkSecurityGroup": {
+                    "id": "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-vnet-default-nsg')]"
+                },
+                "routeTable": {
+                    "id": "[[resourceId('Microsoft.Network/routeTables', 'RT')]"
+                },
+                "delegations": [],
+                "privateEndpointNetworkPolicies": "Disabled",
+                "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2023-11-01",
+            "name": "onprem-vnet",
+            "location": "eastus2",
+            "dependsOn": [
+                "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-asa-default-nsg')]",
+                "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-ssh-default-nsg')]",
+                "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-vnet-default-nsg')]",
+                "[[resourceId('Microsoft.Network/routeTables', 'RT')]"
+            ],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "192.168.0.0/16"
+                    ]
+                },
+                "dhcpOptions": {
+                    "dnsServers": []
+                },
+                "subnets": [
+                    {
+                        "name": "inside",
+                        "id": "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'onprem-vnet', 'inside')]",
+                        "properties": {
+                            "addressPrefix": "192.168.3.0/24",
+                            "networkSecurityGroup": {
+                                "id": "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-asa-default-nsg')]"
+                            },
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Disabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        },
+                        "type": "Microsoft.Network/virtualNetworks/subnets"
+                    },
+                    {
+                        "name": "outside",
+                        "id": "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'onprem-vnet', 'outside')]",
+                        "properties": {
+                            "addressPrefix": "192.168.2.0/24",
+                            "networkSecurityGroup": {
+                                "id": "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-ssh-default-nsg')]"
+                            },
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Disabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        },
+                        "type": "Microsoft.Network/virtualNetworks/subnets"
+                    },
+                    {
+                        "name": "GatewaySubnet",
+                        "id": "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'onprem-vnet', 'GatewaySubnet')]",
+                        "properties": {
+                            "addressPrefix": "192.168.1.0/24",
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Disabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        },
+                        "type": "Microsoft.Network/virtualNetworks/subnets"
+                    },
+                    {
+                        "name": "default",
+                        "id": "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'onprem-vnet', 'default')]",
+                        "properties": {
+                            "addressPrefix": "192.168.0.0/24",
+                            "networkSecurityGroup": {
+                                "id": "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-vnet-default-nsg')]"
+                            },
+                            "routeTable": {
+                                "id": "[[resourceId('Microsoft.Network/routeTables', 'RT')]"
+                            },
+                            "delegations": [],
+                            "privateEndpointNetworkPolicies": "Disabled",
+                            "privateLinkServiceNetworkPolicies": "Enabled"
+                        },
+                        "type": "Microsoft.Network/virtualNetworks/subnets"
+                    }
+                ],
+                "virtualNetworkPeerings": [],
+                "enableDdosProtection": false
+            }
+        }
+    ]
+                                        },
+                                        "mode": "Incremental"
+                                    }
+                                },
+                                "path": "[concat('/subscriptions/@{encodeURIComponent(''',subscription().subscriptionId,''')}/resourcegroups/@{encodeURIComponent(body(''Create_or_update_a_resource_group'')?[''name''])}/providers/Microsoft.Resources/deployments/@{encodeURIComponent(''logictest'')}')]",
+                                "queries": {
+                                    "x-ms-api-version": "2016-06-01",
+                                    "wait": true
+                                }
+                            }
+                        },
+                        "Create_or_update_a_resource_group": {
+                            "runAfter": {},
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['arm']['connectionId']"
+                                    }
+                                },
+                                "method": "put",
+                                "body": {
+                                    "location": "[resourceGroup().location]"
+                                },
+                                "path": "[concat('/subscriptions/@{encodeURIComponent(''',subscription().subscriptionId,''')}/resourcegroups/@{encodeURIComponent(''',parameters('RG-name'),''')}')]",
+                                "queries": {
+                                    "x-ms-api-version": "2016-06-01"
+                                }
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "arm": {
+                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',resourceGroup().location,'/managedApis/arm')]",
+                                //"connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/arm')]",
+                                "connectionId": "[resourceId('Microsoft.Web/connections', 'arm')]",
+                                "connectionName": "arm",
+                                "connectionProperties": {
+                                    "authentication": {
+                                        "type": "ManagedServiceIdentity"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/connections', 'arm')]"
+            ]     
+        },
+        
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "lab-s2s-killer",
+            "location": "[resourceGroup().location]",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "Recurrence": {
+                "evaluatedRecurrence": {
+                    "frequency": "Week",
+                    "interval": 1,
+                    "schedule": {
+                        "weekDays": [
+                            "Monday",
+                            "Tuesday",
+                            "Wednesday",
+                            "Thursday",
+                            "Friday"
+                        ]
+                    },
+                    "startTime": "2023-11-15T22:00:00Z"
+                },
+                "recurrence": {
+                    "frequency": "Week",
+                    "interval": 1,
+                    "schedule": {
+                        "weekDays": [
+                            "Monday",
+                            "Tuesday",
+                            "Wednesday",
+                            "Thursday",
+                            "Friday"
+                        ]
+                    },
+                    "startTime": "2023-11-15T22:00:00Z"
+                },
+                            "type": "Recurrence"
+                        }
+                    },
+                    "actions": {
+                        "Delete_a_resource_group": {
+                            "runAfter": {},
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['arm']['connectionId']"
+                                    }
+                                },
+                                "method": "delete",
+                                //"path": "[concat('/subscriptions/@{encodeURIComponent(''',subscription().subscriptionId,''')}/resourcegroups/@{encodeURIComponent(''RG-autolab'')}')]",
+                                "path": "[concat('/subscriptions/@{encodeURIComponent(''',subscription().subscriptionId,''')}/resourcegroups/@{encodeURIComponent(''',parameters('RG-name'),''')}')]",
+                                "queries": {
+                                    "x-ms-api-version": "2016-06-01"
+                                }
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "arm": {
+                                "id": "[concat('/subscriptions/',subscription().subscriptionId,'/providers/Microsoft.Web/locations/',resourceGroup().location,'/managedApis/arm')]",
+                                //"connectionId": "[concat('/subscriptions/',subscription().subscriptionId,'/resourceGroups/',resourceGroup().name,'/providers/Microsoft.Web/connections/arm-1')]",
+                                "connectionId": "[resourceId('Microsoft.Web/connections', 'arm')]",
+                                "connectionName": "arm",
+                                "connectionProperties": {
+                                    "authentication": {
+                                        "type": "ManagedServiceIdentity"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/connections', 'arm')]"
+            ]
+        }
+        
+    ]
+}
