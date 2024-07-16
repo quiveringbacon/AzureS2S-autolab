@@ -14,7 +14,7 @@ You can run these powershell commands in the cloudshell to do that:
     New-AzRoleAssignment -ObjectId $id1 -RoleDefinitionName Contributor -Scope /subscriptions/$subid  
     New-AzRoleAssignment -ObjectId $id2 -RoleDefinitionName Contributor -Scope /subscriptions/$subid  
 
-This creates a hub vnet with vpn gateway and a couple of spoke vnets with VM's peered to the hub vnet and an onprem vnet with a ASAv with a S2S tunnel to the vhub. You'll be prompted for the resource group name to deploy the logicapps in, a location for that resource group, your public ip and username and password to use for the VM's and a resource group for the lab resources to be in, this resource group will be created and deleted everyday. NSG's are placed on the default subnets of each vnet allowing RDP access from your public ip. This also creates a logic app that will delete the resource group in 24hrs.
+This creates a hub vnet with vpn gateway and a couple of spoke vnets with VM's peered to the hub vnet and an onprem vnet with a ASAv with a S2S tunnel to the vhub. You'll be prompted for the resource group name to deploy the logicapps in, a location for that resource group, your public ip and username and password to use for the VM's and a resource group for the lab resources to be in, this resource group will be created and deleted everyday.  JIT access is setup for 8 hours allowing RDP/ssh access from your public ip.
 
 The topology of the lab will look like this:
 ![vpnlab-asav](https://github.com/user-attachments/assets/606faaf2-ffc9-492e-9c5c-89441606137f)
