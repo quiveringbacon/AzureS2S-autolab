@@ -137,7 +137,7 @@
             "type": "Microsoft.Network/localNetworkGateways",
             "apiVersion": "2023-11-01",
             "name": "onpremlng",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "properties": {
                 "localNetworkAddressSpace": {
                     "addressPrefixes": [
@@ -157,7 +157,7 @@
             "type": "Microsoft.Network/networkSecurityGroups",
             "apiVersion": "2023-11-01",
             "name": "AZ-hub-vnet-default-nsg",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "properties": {
                 "securityRules": [
                     
@@ -168,7 +168,7 @@
             "type": "Microsoft.Network/networkSecurityGroups",
             "apiVersion": "2023-11-01",
             "name": "AZ-spoke-vnet-default-nsg",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "properties": {
                 "securityRules": [
                     
@@ -179,7 +179,7 @@
             "type": "Microsoft.Network/networkSecurityGroups",
             "apiVersion": "2023-11-01",
             "name": "onprem-asa-default-nsg",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "properties": {
                 "securityRules": [
                     {
@@ -227,7 +227,7 @@
             "type": "Microsoft.Network/networkSecurityGroups",
             "apiVersion": "2023-11-01",
             "name": "onprem-ssh-default-nsg",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "properties": {
                 "securityRules": [
                     
@@ -238,7 +238,7 @@
             "type": "Microsoft.Network/networkSecurityGroups",
             "apiVersion": "2023-11-01",
             "name": "onprem-vnet-default-nsg",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "properties": {
                 "securityRules": [
                     
@@ -249,7 +249,7 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "apiVersion": "2023-11-01",
             "name": "azurevpngw-pip",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "sku": {
                 "name": "Standard",
                 "tier": "Regional"
@@ -269,7 +269,7 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "apiVersion": "2023-11-01",
             "name": "hubvm-pip",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "sku": {
                 "name": "Basic",
                 "tier": "Regional"
@@ -289,7 +289,7 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "apiVersion": "2023-11-01",
             "name": "onpremasa-pip",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "sku": {
                 "name": "Standard",
                 "tier": "Regional"
@@ -309,7 +309,7 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "apiVersion": "2023-11-01",
             "name": "onpremvm-pip",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "sku": {
                 "name": "Basic",
                 "tier": "Regional"
@@ -329,7 +329,7 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "apiVersion": "2023-11-01",
             "name": "spokevm-pip",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "sku": {
                 "name": "Basic",
                 "tier": "Regional"
@@ -349,7 +349,7 @@
             "type": "Microsoft.Network/routeTables",
             "apiVersion": "2023-11-01",
             "name": "RT",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "properties": {
                 "disableBgpRoutePropagation": false,
                 "routes": [
@@ -372,7 +372,7 @@
             "type": "Microsoft.Compute/virtualMachines",
             "apiVersion": "2024-03-01",
             "name": "hubvm",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Network/networkInterfaces', 'hubvm-nic')]"
             ],
@@ -450,7 +450,7 @@
             "type": "Microsoft.Compute/virtualMachines",
             "apiVersion": "2024-03-01",
             "name": "onpremvm",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Network/networkInterfaces', 'onpremvm-nic')]"
             ],
@@ -528,7 +528,7 @@
             "type": "Microsoft.Compute/virtualMachines",
             "apiVersion": "2024-03-01",
             "name": "spokevm",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Network/networkInterfaces', 'spokevm-nic')]"
             ],
@@ -606,7 +606,7 @@
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "apiVersion": "2024-03-01",
             "name": "hubvm/killhubvmfirewall",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Compute/virtualMachines', 'hubvm')]"
             ],
@@ -625,7 +625,7 @@
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "apiVersion": "2024-03-01",
             "name": "onpremvm/killonpremvmfirewall",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Compute/virtualMachines', 'onpremvm')]"
             ],
@@ -644,7 +644,7 @@
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "apiVersion": "2024-03-01",
             "name": "spokevm/killspokevmfirewall",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Compute/virtualMachines', 'spokevm')]"
             ],
@@ -664,7 +664,7 @@
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2023-11-01",
             "name": "asainside-nic",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'onprem-vnet', 'inside')]"
             ],
@@ -802,7 +802,7 @@
             "type": "Microsoft.Compute/virtualMachines",
             "apiVersion": "2024-03-01",
             "name": "asa",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Network/networkInterfaces', 'asaoutside-nic')]",
                 "[[resourceId('Microsoft.Network/networkInterfaces', 'asainside-nic')]"
@@ -888,7 +888,7 @@
             "type": "Microsoft.Network/connections",
             "apiVersion": "2023-11-01",
             "name": "to-onprem",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Network/virtualNetworkGateways', 'AzVPNGW')]",
                 "[[resourceId('Microsoft.Network/localNetworkGateways', 'onpremlng')]"
@@ -910,7 +910,7 @@
                 "useLocalAzureIpAddress": false,
                 "usePolicyBasedTrafficSelectors": false,
                 "ipsecPolicies": [
-			{
+                    {
                 "saLifeTimeSeconds": 27000,
                 "saDataSizeKilobytes": 0,
                 "ipsecEncryption": "AES256",
@@ -920,7 +920,7 @@
                 "dhGroup": "DHGroup14",
                 "pfsGroup": "None"
                     }
-		],
+                ],
                 "trafficSelectorPolicies": [],
                 "expressRouteGatewayBypass": false,
                 "enablePrivateLinkFastPath": false,
@@ -933,7 +933,7 @@
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2023-11-01",
             "name": "asaoutside-nic",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Network/publicIPAddresses', 'onpremasa-pip')]",
                 "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'onprem-vnet', 'outside')]"
@@ -974,7 +974,7 @@
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2023-11-01",
             "name": "hubvm-nic",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Network/publicIPAddresses', 'hubvm-pip')]",
                 "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'AZ-hub-vnet', 'default')]"
@@ -1015,7 +1015,7 @@
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2023-11-01",
             "name": "onpremvm-nic",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Network/publicIPAddresses', 'onpremvm-pip')]",
                 "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'onprem-vnet', 'default')]"
@@ -1056,7 +1056,7 @@
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2023-11-01",
             "name": "spokevm-nic",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Network/publicIPAddresses', 'spokevm-pip')]",
                 "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'AZ-spoke-vnet', 'default')]"
@@ -1097,7 +1097,7 @@
             "type": "Microsoft.Network/virtualNetworkGateways",
             "apiVersion": "2023-11-01",
             "name": "AzVPNGW",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Network/publicIPAddresses', 'azurevpngw-pip')]",
                 "[[resourceId('Microsoft.Network/virtualNetworks/subnets', 'AZ-hub-vnet', 'GatewaySubnet')]"
@@ -1151,7 +1151,7 @@
             "type": "Microsoft.Network/virtualNetworks",
             "apiVersion": "2023-11-01",
             "name": "AZ-hub-vnet",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Network/networkSecurityGroups', 'AZ-hub-vnet-default-nsg')]"
                 
@@ -1229,7 +1229,7 @@
             "type": "Microsoft.Network/virtualNetworks",
             "apiVersion": "2023-11-01",
             "name": "AZ-spoke-vnet",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Network/networkSecurityGroups', 'AZ-spoke-vnet-default-nsg')]"
                 
@@ -1466,7 +1466,7 @@
             "type": "Microsoft.Network/virtualNetworks",
             "apiVersion": "2023-11-01",
             "name": "onprem-vnet",
-            "location": "eastus2",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-asa-default-nsg')]",
                 "[[resourceId('Microsoft.Network/networkSecurityGroups', 'onprem-ssh-default-nsg')]",
