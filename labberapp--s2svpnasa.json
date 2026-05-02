@@ -254,6 +254,11 @@
                 "name": "Standard",
                 "tier": "Regional"
             },
+			"zones": [
+    				"1",
+    				"2",
+    				"3"
+  					],
             "properties": {
                 
                 "publicIPAddressVersion": "IPv4",
@@ -1124,8 +1129,8 @@
                 "enableBgpRouteTranslationForNat": false,
                 "disableIPSecReplayProtection": false,
                 "sku": {
-                    "name": "VpnGw2",
-                    "tier": "VpnGw2"
+                    "name": "VpnGw2AZ",
+                    "tier": "VpnGw2AZ"
                 },
                 "gatewayType": "Vpn",
                 "vpnType": "RouteBased",
